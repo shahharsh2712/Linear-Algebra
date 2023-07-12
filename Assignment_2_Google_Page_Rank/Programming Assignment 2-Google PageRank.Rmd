@@ -1,0 +1,127 @@
+---
+title: 'Programming Assignment 2: Google PageRank'
+author: "Yu-Wen Chen & Harsh Rajeshkumar Shah"
+date: "2020/9/17"
+output: html_document
+---
+
+
+#### a. Determine the corresponding transition matrix A.
+```{r }
+#Corresponding transition matrix of (a)
+Aa<-matrix(c(0,1/3,1/3,1/3,0,0,1/2,1/2,1,0,0,0,1/2,0,1/2,0),nrow=4)
+
+#Pint out the matrix (a)
+print(Aa)
+
+#Corresponding transition matrix of (b)
+Ab<-matrix(c(0,1/3,1/3,1/3,0,0,0,0,1/2,1/2,1,0,0,0,0,0,1/2,1/2,0,0,0,0,0,0,1),nrow=5)
+
+#Pint out the matrix (b)
+print(Ab)
+
+```
+#### b.  Determine the google matrix G
+```{r}
+#(1)Google matrix of (a)
+#According to the formula: G=(1-p)P+pK, p=0.15
+#We need to determine the matrix K for a first
+Ka<-matrix(c(rep(1/4,16)),nrow=4)
+
+#Then determine the Google matrix of (a)
+Pa=Aa
+Ga<-matrix(c(0.85*Pa+0.15*Ka),nrow=4)
+
+#Pint out the Google matrix of (a)
+print(Ga)
+
+#(2)Google matrix of (b)
+#Determine the matrix K for b first
+Kb<-matrix(c(rep(1/5,25)),nrow=5)
+
+#Determine the matrix P for b because there are dangling node in b
+Pb<-matrix(c(0,1/3,1/3,1/3,0,0,0,0,1/2,1/2,1,0,0,0,0,0,1/2,1/2,0,0,1/5,1/5,1/5,1/5,1/5),nrow=5)
+
+#Then determine the Google matrix of (b)
+Gb<-matrix(c(0.85*Pb+0.15*Kb),nrow=5)
+
+#Pint out the Google matrix of (b)
+print(Gb)
+
+```
+
+#### c. Does either graph have a dangling node? If so which one(s)?
+```{r}
+#Testing is there any dangling node in a graph
+#Check the probability of a after 60 step
+library(expm)
+
+Aa%^%60
+Aa_eig<-eigen(Aa)
+Aa_eig$vectors[,1]/sum(Aa_eig$vectors[,1])
+
+#Check the probability of b after 50 and 51 step
+Ab%^%39
+Ab%^%40
+
+Ab_eig<-eigen(Ab)
+Ab_eig$vectors[,1]/sum(Ab_eig$vectors[,1])
+
+```
+#### According to the result, the graph (b) has a dangling nodes which is states 5.
+
+
+
+
+#### d. Does either graph have a disconnected node? If so which one(s)?
+
+```{r}
+Aa_eig<-eigen(Aa)
+
+
+adis<-sweep(Aa_eig$vectors,MARGIN = 2,colSums(Aa_eig$vectors),"/")
+adis
+
+Ab_eig<-eigen(Ab)
+
+
+bdis<-sweep(Ab_eig$vectors,MARGIN = 2,colSums(Ab_eig$vectors),"/")
+bdis
+```
+#### According to the result, there is no disconnected node in neither of them.
+
+
+
+#### e. Compute the PageRank of each page in the set. (Recall that the PageRank vector for a web graph with transition matrix A, and damping factor p, is the unique probabilistic eigenvector of the matrix G, corresponding to the eigenvalue 1.)
+```{r}
+#According to the formula:G=(1-p)A+pK ,(G-λI)q=0, λ=eigenvalue=1, q=steady-state vector
+
+#(a)
+#Using  the Google matrix of (a) to calculate the eigenvalue and the eigenvector
+Ga_eig<-eigen(Ga)
+
+#print out the eigenvalue and eigenvector
+print(Ga_eig)
+
+#Calculate the steady-state vector which is also the PageRank
+Ga_eig$vectors[,1]/sum(Ga_eig$vectors[,1])
+
+#(b)
+#Using the Google matrix of (b) to calculate the eigenvalue and the eigenvector
+Gb_eig<-eigen(Gb)
+
+#print out the eigenvalue and eigenvector
+print(Gb_eig)
+
+#Calculate the steady-state vector which is also the PageRank
+Gb_eig$vectors[,1]/sum(Gb_eig$vectors[,1])
+
+
+```
+#### (a)PageRank   p1<-0.3681507+0i p2<-0.1418094+0i p3<-0.2879616+0i p4<-0.2020783+0i
+#### According to PageRank, the most important page in the graph a is page 3. The complete rank in is page 3,1,4, and 2.
+
+#### (b)PageRank   p1<-0.2315348;p2<-0.2085167 ;p3<-0.2085167 ;p4<-0.2085167;p5<-0.1429152
+
+#### According to PageRank, the most important page in graph b is pages 2,3,4. The complete rank is pages 2 and 3 and 4,1, and 5.
+
